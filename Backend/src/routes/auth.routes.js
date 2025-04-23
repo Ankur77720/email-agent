@@ -2,6 +2,7 @@ import { Router } from "express";
 import axios from 'axios';
 import config from '../config/config.js';
 import querystring from 'querystring';
+import userModel from "../models/user.model.js"
 const router = Router();
 
 router.get('/google/callback', async (req, res) => {
@@ -42,6 +43,26 @@ router.get('/google/callback', async (req, res) => {
         });
 
         const userProfile = profileResponse.data;
+
+
+        const isUserExist = await userModel.findOne({ email: userProfile.email });
+
+        if (isUserExist) {
+
+            isUserExist.refreshToken = refresh_token || isUserExist.refreshToken;
+            await isUserExist.save();
+            return res.status(200).json({
+                message: 'Authentication successful',
+                profile: userProfile
+            });
+        }
+
+
+        const newUser = await userModel.create({
+            name: userProfile.name,
+            email: userProfile.email,
+            refreshToken: refresh_token
+        })
 
         res.status(200).json({
             message: 'Authentication successful',
