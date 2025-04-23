@@ -1,7 +1,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import mongoose from "mongoose";
+import fs from "fs";
 import { z } from "zod";
 import googleService from "../services/google.service.js"
+
+
+mongoose.connect("mongodb://localhost:27017/kodr-email-agent").then(() => {
+    console.log("Connected to MongoDB")
+})
+
 
 const server = new McpServer({
     name: "example-server",
@@ -17,10 +25,28 @@ server.tool("sendmail", "send a mail to a emailaddress", {
     try {
         await googleService.sendEmail(userid, to, subject, message)
 
-        return "Mail sent successfully"
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: "Mail sent successfully"
+                }
+            ]
+        }
     } catch (err) {
         console.log(err)
-        return "Error sending mail"
+
+        fs.writeFileSync("./error.txt", `${err}`)
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Error sending mail: ${err}`
+                }
+            ]
+        }
+
     }
 });
 
