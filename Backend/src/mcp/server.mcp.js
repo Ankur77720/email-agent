@@ -63,5 +63,21 @@ server.tool('fetchmails', "fetch latest emails", {
     }
 });
 
+server.tool('createevent', "create a calendar event", {
+    userid: z.string(),
+    start: z.string(),
+    end: z.string(),
+    summary: z.string(),
+    description: z.string().optional()
+}, async ({ userid, start, end, summary, description }) => {
+    try {
+        const event = await googleService.createEvent(userid, start, end, summary, description)
+        return event
+    } catch (err) {
+        console.log(err)
+        return "Error creating event"
+    }
+})
+
 const transport = new StdioServerTransport();
 await server.connect(transport);

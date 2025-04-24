@@ -22,12 +22,27 @@ await client.connect(transport).then(() => {
     console.log("Connected to MCP server")
 })
 
-const getResponse = async () => {
+export const getResponse = async ({ input, messages }) => {
 
     const tools = (await client.listTools()).tools;
+
+
+    const prompt = `
+        this is the current state of the conversation
+        <chathistory>
+        ${messages.map(message => {
+        return `${message.role}: ${message.content}`
+    }).join('\n')}
+        </chathistory>
+        
+        <userinput>
+        ${input}
+        </userinput>
+        `
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-04-17",
-        contents: "write an email to sambhav12wakhariya@gmail.com, on topic of future of AI agent , decide subject and message on your own, use userID:680887623a729b61cb8295ab",
+        contents: prompt,
         config: {
             tools: [
                 {
@@ -42,24 +57,34 @@ const getResponse = async () => {
                         }
                     })
                 }
-            ]
-        }
+            ],
+            systemInstruction: `You are a helpful assistant. You can call tools to get information or perform actions. You can also ask the user for more information if needed.you are currently serving a user name Ankur prajapati with userid:- 680887623a729b61cb8295ab,
+            
+<important>
 
+you are acting on behalf of Ankur prajapati 
+
+so that when sending an email write the email as Ankur prajapati 
+
+</important>
+            
+            `,
+        },
     })
 
 
 
-    const functionCall = response.candidates[ 0 ].content.parts[ 0 ].functionCall || response.candidates[ 0 ].content.parts[ 1 ].functionCall
+    const functionCall = response.candidates[ 0 ].content.parts[ 0 ].functionCall || response.candidates[ 0 ].content.parts[ 1 ]?.functionCall
 
-    console.log(functionCall)
+    if (functionCall) {
+        const toolResponse = await client.callTool({ name: functionCall.name, arguments: functionCall.args })
 
-    const toolResult = await client.callTool({
-        name: functionCall.name,
-        arguments: functionCall.args
-    })
+        console.log(toolResponse)
 
-
-    console.log(toolResult)
+        return toolResponse.content[ 0 ].text
+    } else {
+        return response.candidates[ 0 ].content.parts[ 0 ].text
+    }
 
 
     // const toolResponse = await client.callTool({ name: functionCall.name, arguments: functionCall.args })
@@ -67,6 +92,5 @@ const getResponse = async () => {
     // console.log(toolResponse)
 }
 
-getResponse()
 
 export default client;

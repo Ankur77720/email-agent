@@ -63,7 +63,19 @@ async function fetchEmails(userId, maxCount) {
 /**
  * Create a calendar event for a user.
  */
-async function createEvent(userId, eventDetails) {
+async function createEvent(userId, start, end, summary, description) {
+    const eventDetails = {
+        start: {
+            dateTime: start,
+            timeZone: 'America/Los_Angeles',
+        },
+        end: {
+            dateTime: end,
+            timeZone: 'America/Los_Angeles',
+        },
+        summary,
+        description,
+    };
     const auth = await getAuthenticatedClient(userId);
     const calendar = google.calendar({ version: 'v3', auth });
 
