@@ -27,7 +27,7 @@ const getResponse = async () => {
     const tools = (await client.listTools()).tools;
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-04-17",
-        contents: "write an email to buriburizaimontest@gmail.com, on topic of future of AI agent , decide subject and message on your own, use userID:680887623a729b61cb8295ab",
+        contents: "write an email to sambhav12wakhariya@gmail.com, on topic of future of AI agent , decide subject and message on your own, use userID:680887623a729b61cb8295ab",
         config: {
             tools: [
                 {
@@ -49,13 +49,22 @@ const getResponse = async () => {
 
 
 
-    const functionCall = response.candidates[ 0 ].content.parts[ 0 ]?.functionCall || response.candidates[ 0 ].content.parts[ 1 ]?.functionCall
+    const functionCall = response.candidates[ 0 ].content.parts[ 0 ].functionCall || response.candidates[ 0 ].content.parts[ 1 ].functionCall
 
     console.log(functionCall)
 
-    const toolResponse = await client.callTool({ name: functionCall.name, arguments: functionCall.args })
+    const toolResult = await client.callTool({
+        name: functionCall.name,
+        arguments: functionCall.args
+    })
 
-    console.log(toolResponse)
+
+    console.log(toolResult)
+
+
+    // const toolResponse = await client.callTool({ name: functionCall.name, arguments: functionCall.args })
+
+    // console.log(toolResponse)
 }
 
 getResponse()
